@@ -25,7 +25,7 @@
 #include "wifikeys.h" //#define SSID1 "replace with your wifi ssid"    #define PWD1 "replace your wifi password"
 OV2640 cam;
 
-WebServer server(702);
+WebServer server(701);
 
 // ===== rtos task handles =========================
 // Streaming is implemented with 3 tasks:
@@ -358,7 +358,7 @@ void mjpegCB(void* pvParameters) {
     APP_CPU);
 
   //  Registering webserver handling routines
-  server.on("/mjpeg", HTTP_GET, handleJPGSstream);
+  server.on("/mjpeg/1", HTTP_GET, handleJPGSstream);
   server.on("/jpg", HTTP_GET, handleJPG);
   server.onNotFound(handleNotFound);
 
