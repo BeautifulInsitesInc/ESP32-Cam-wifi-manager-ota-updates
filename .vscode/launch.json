@@ -14,7 +14,7 @@
             "name": "PIO Debug",
             "executable": "d:/Dropbox/code/project-esp32-camera/.pio/build/esp32cam/firmware.elf",
             "projectEnvName": "esp32cam",
-            "toolchainBinDir": "C:/Users/feara/.platformio/packages/toolchain-xtensa32/bin",
+            "toolchainBinDir": "C:/Users/feara_mxkamnl/.platformio/packages/toolchain-xtensa32/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "preLaunchTask": {
                 "type": "PlatformIO",
@@ -27,7 +27,7 @@
             "name": "PIO Debug (skip Pre-Debug)",
             "executable": "d:/Dropbox/code/project-esp32-camera/.pio/build/esp32cam/firmware.elf",
             "projectEnvName": "esp32cam",
-            "toolchainBinDir": "C:/Users/feara/.platformio/packages/toolchain-xtensa32/bin",
+            "toolchainBinDir": "C:/Users/feara_mxkamnl/.platformio/packages/toolchain-xtensa32/bin",
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
@@ -36,7 +36,7 @@
             "name": "PIO Debug (without uploading)",
             "executable": "d:/Dropbox/code/project-esp32-camera/.pio/build/esp32cam/firmware.elf",
             "projectEnvName": "esp32cam",
-            "toolchainBinDir": "C:/Users/feara/.platformio/packages/toolchain-xtensa32/bin",
+            "toolchainBinDir": "C:/Users/feara_mxkamnl/.platformio/packages/toolchain-xtensa32/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "loadMode": "manual"
         }
