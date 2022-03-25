@@ -10,7 +10,6 @@
 #include <esp_sleep.h>
 #include <driver/rtc_io.h>
 
-
 // Select camera model
 //#define CAMERA_MODEL_WROVER_KIT
 //#define CAMERA_MODEL_ESP_EYE
@@ -20,8 +19,8 @@
 
 #include "camera_pins.h"
 
-
 OV2640 cam;
+WebServer server(port_number); // Set port to selected
 
 // ===== rtos task handles =========================
 // Streaming is implemented with 3 tasks:
@@ -41,12 +40,9 @@ const int FPS = 14;
 // We will handle web client requests every 50 ms (20 Hz)
 const int WSINTERVAL = 100;
 
-
 // Commonly used variables:
 volatile size_t camSize;    // size of the current frame, byte
 volatile char* camBuf;      // pointer to the current frame
-
-
 
 // ==== STREAMING ======================================================
 const char HEADER[] = "HTTP/1.1 200 OK\r\n" \
@@ -57,10 +53,6 @@ const char CTNTTYPE[] = "Content-Type: image/jpeg\r\nContent-Length: ";
 const int hdrLen = strlen(HEADER);
 const int bdrLen = strlen(BOUNDARY);
 const int cntLen = strlen(CTNTTYPE);
-
-
-
-
 
 // ==== Memory allocator that takes advantage of PSRAM if present =======================
 char* allocateMemory(char* aPtr, size_t aSize) {
@@ -94,10 +86,6 @@ char* allocateMemory(char* aPtr, size_t aSize) {
   }
   return ptr;
 }
-
-
-
-
 
 
 
@@ -170,13 +158,6 @@ void camCB(void* pvParameters) {
     }
   }
 }
-
-
-
-
-
-
-
 
 
 
