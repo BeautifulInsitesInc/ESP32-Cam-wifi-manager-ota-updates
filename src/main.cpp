@@ -1,20 +1,36 @@
 #include <Arduino.h>
-#include "wifi_manager.h"
+#include <WiFiManager.h>
+#include <WiFi.h>
+
+WebServer server(702);
+IPAddress ip;
+
+// On demand AP
+#define TRIGGER_PIN 2
+int timeout = 120; // seconds to run for
+
+//#include "multiclient_server.h"
 #include "multi_client_RTS.h"
+#include "wifi_manager.h"
+//#include "original_connection.h"
 
-//WebServer server(703);
 
-void setup(){
-  Serial.begin(115200); Serial.print("Running Setup");
-
-  wifi_manager_config();
+// ==== SETUP method ==================================================================
+void setup()
+{
+  // Setup Serial connection:
+  Serial.begin(115200);
+  Serial.print("Running Setup");
   
-  multiclientConfig();
-
+  connectionManager();
+  //originalConnection();
+  
 }
 
 void loop() {
-  wifi_manager_check_for_reset();
+  vTaskDelay(1000);
+  if (digitalRead(TRIGGER_PIN) == LOW) connectionManagerLoop();
+
 }
 
 
