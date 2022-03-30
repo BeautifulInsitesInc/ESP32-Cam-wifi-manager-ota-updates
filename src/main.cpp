@@ -1,3 +1,25 @@
+/*
+
+  This is a simple MJPEG streaming webserver implemented for AI-Thinker ESP32-CAM
+  and ESP-EYE modules.
+  This is tested to work with VLC and Blynk video widget and can support up to 10
+  simultaneously connected streaming clients.
+  Simultaneous streaming is implemented with FreeRTOS tasks.
+
+  Inspired by and based on this Instructable: $9 RTSP Video Streamer Using the ESP32-CAM Board
+  (https://www.instructables.com/id/9-RTSP-Video-Streamer-Using-the-ESP32-CAM-Board/)
+
+  Board: AI-Thinker ESP32-CAM or ESP-EYE
+  Compile as:
+   ESP32 Dev Module
+   CPU Freq: 240
+   Flash Freq: 80
+   Flash mode: QIO
+   Flash Size: 4Mb
+   Patrition: Minimal SPIFFS
+   PSRAM: Enabled
+*/
+
 // ESP32 has two cores: APPlication core and PROcess core (the one that runs ESP32 SDK stack)
 #define APP_CPU 1
 #define PRO_CPU 0
@@ -20,7 +42,25 @@
 #define CAMERA_MODEL_AI_THINKER
 
 #include "camera_pins.h"
-#include "wifi_keys.h"
+
+/*
+  Next one is an include with wifi credentials.
+  This is what you need to do:
+
+  1. Create a file called "home_wifi_multi.h" in the same folder   OR   under a separate subfolder of the "libraries" folder of Arduino IDE. (You are creating a "fake" library really - I called it "MySettings").
+  2. Place the following text in the file:
+  #define SSID1 "replace with your wifi ssid"
+  #define PWD1 "replace your wifi password"
+  3. Save.
+
+  Should work then
+*/
+#include "wifikeys.h"
+
+// Commonly used variables:
+volatile size_t camSize;    // size of the current frame, byte
+volatile char* camBuf;      // pointer to the current frame
+
 
 OV2640 cam;
 
@@ -44,50 +84,6 @@ const int FPS = 14;
 // We will handle web client requests every 50 ms (20 Hz)
 const int WSINTERVAL = 100;
 
-
-
-
-// Commonly used variables:
-volatile size_t camSize;    // size of the current frame, byte
-volatile char* camBuf;      // pointer to the current frame
-
-
-
-
-// ==== Memory allocator that takes advantage of PSRAM if present =======================
-char* allocateMemory(char* aPtr, size_t aSize) {
-
-  //  Since current buffer is too smal, free it
-  if (aPtr != NULL) free(aPtr);
-
-
-  size_t freeHeap = ESP.getFreeHeap();
-  char* ptr = NULL;
-
-  // If memory requested is more than 2/3 of the currently free heap, try PSRAM immediately
-  if ( aSize > freeHeap * 2 / 3 ) {
-    if ( psramFound() && ESP.getFreePsram() > aSize ) {
-      ptr = (char*) ps_malloc(aSize);
-    }
-  }
-  else {
-    //  Enough free heap - let's try allocating fast RAM as a buffer
-    ptr = (char*) malloc(aSize);
-
-    //  If allocation on the heap failed, let's give PSRAM one more chance:
-    if ( ptr == NULL && psramFound() && ESP.getFreePsram() > aSize) {
-      ptr = (char*) ps_malloc(aSize);
-    }
-  }
-
-  // Finally, if the memory pointer is NULL, we were not able to allocate any memory, and that is a terminal condition.
-  if (ptr == NULL) {
-    ESP.restart();
-  }
-  return ptr;
-}
-
-
 // ==== STREAMING ======================================================
 const char HEADER[] = "HTTP/1.1 200 OK\r\n" \
                       "Access-Control-Allow-Origin: *\r\n" \
@@ -97,6 +93,30 @@ const char CTNTTYPE[] = "Content-Type: image/jpeg\r\nContent-Length: ";
 const int hdrLen = strlen(HEADER);
 const int bdrLen = strlen(BOUNDARY);
 const int cntLen = strlen(CTNTTYPE);
+
+
+
+// ==== Handle invalid URL requests ============================================
+void handleNotFound()
+{
+  String message = "Server is running!\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  server.send(200, "text / plain", message);
+}
+
+const char JHEADER[] = "HTTP/1.1 200 OK\r\n" \
+                       "Content-disposition: inline; filename=capture.jpg\r\n" \
+                       "Content-type: image/jpeg\r\n\r\n";
+const int jhdLen = strlen(JHEADER);
+
+
+
 
 
 // ==== Handle connection request from clients ===============================
@@ -121,6 +141,9 @@ void handleJPGSstream(void)
   if ( eTaskGetState( tCam ) == eSuspended ) vTaskResume( tCam );
   if ( eTaskGetState( tStream ) == eSuspended ) vTaskResume( tStream );
 }
+
+
+
 
 
 // ==== Actually stream content to all connected clients ========================
@@ -192,36 +215,51 @@ void streamCB(void * pvParameters) {
 
 
 
-const char JHEADER[] = "HTTP/1.1 200 OK\r\n" \
-                       "Content-disposition: inline; filename=capture.jpg\r\n" \
-                       "Content-type: image/jpeg\r\n\r\n";
-const int jhdLen = strlen(JHEADER);
 
-// ==== Serve up one JPEG frame =============================================
-void handleJPG(void)
-{
-  WiFiClient client = server.client();
 
-  if (!client.connected()) return;
-  cam.run();
-  client.write(JHEADER, jhdLen);
-  client.write((char*)cam.getfb(), cam.getSize());
+
+
+
+
+
+
+// ==== Memory allocator that takes advantage of PSRAM if present =======================
+char* allocateMemory(char* aPtr, size_t aSize) {
+
+  //  Since current buffer is too smal, free it
+  if (aPtr != NULL) free(aPtr);
+
+
+  size_t freeHeap = ESP.getFreeHeap();
+  char* ptr = NULL;
+
+  // If memory requested is more than 2/3 of the currently free heap, try PSRAM immediately
+  if ( aSize > freeHeap * 2 / 3 ) {
+    if ( psramFound() && ESP.getFreePsram() > aSize ) {
+      ptr = (char*) ps_malloc(aSize);
+    }
+  }
+  else {
+    //  Enough free heap - let's try allocating fast RAM as a buffer
+    ptr = (char*) malloc(aSize);
+
+    //  If allocation on the heap failed, let's give PSRAM one more chance:
+    if ( ptr == NULL && psramFound() && ESP.getFreePsram() > aSize) {
+      ptr = (char*) ps_malloc(aSize);
+    }
+  }
+
+  // Finally, if the memory pointer is NULL, we were not able to allocate any memory, and that is a terminal condition.
+  if (ptr == NULL) {
+    ESP.restart();
+  }
+  return ptr;
 }
 
 
-// ==== Handle invalid URL requests ============================================
-void handleNotFound()
-{
-  String message = "Server is running!\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-  server.send(200, "text / plain", message);
-}
+
+
+
 
 
 // ==== RTOS task to grab frames from the camera =========================
@@ -297,6 +335,22 @@ void camCB(void* pvParameters) {
 
 
 
+
+
+// ==== Serve up one JPEG frame =============================================
+void handleJPG(void)
+{
+  WiFiClient client = server.client();
+
+  if (!client.connected()) return;
+  cam.run();
+  client.write(JHEADER, jhdLen);
+  client.write((char*)cam.getfb(), cam.getSize());
+}
+
+
+
+
 // ======== Server Connection Handler Task ==========================
 void mjpegCB(void* pvParameters) {
   TickType_t xLastWakeTime;
@@ -349,6 +403,21 @@ void mjpegCB(void* pvParameters) {
     vTaskDelayUntil(&xLastWakeTime, xFrequency);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
