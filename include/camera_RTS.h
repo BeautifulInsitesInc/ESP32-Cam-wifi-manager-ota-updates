@@ -49,7 +49,7 @@
 
   Should work then
 */
-#include "wifikeys.h"
+//#include "wifikeys.h"
 
 // Commonly used variables:
 volatile size_t camSize;    // size of the current frame, byte
@@ -442,7 +442,7 @@ void cameraSetup(){
     ESP.restart();
   }
 
-
+/*
   //  Configure and connect to WiFi
   IPAddress ip;
 
@@ -460,7 +460,7 @@ void cameraSetup(){
   Serial.print("Stream Link: http://");
   Serial.print(ip);
   Serial.println("/mjpeg/1");
-
+*/
 
   // Start mainstreaming RTOS task
   xTaskCreatePinnedToCore(

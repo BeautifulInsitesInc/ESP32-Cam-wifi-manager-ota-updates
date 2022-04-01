@@ -35,3 +35,4 @@ test/*
 test
 .gitignore
 wifikeys.h
+credentials.h
