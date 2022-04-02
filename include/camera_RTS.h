@@ -384,8 +384,23 @@ void mjpegCB(void* pvParameters) {
   server.on("/jpg", HTTP_GET, handleJPG);
   server.onNotFound(handleNotFound);
 
+
+
+
+
+
+
+
   //  Starting webserver
+  ElegantOTA.begin(&server);    // Start ElegantOTA
+  poutln("ElegantOTA started");
   server.begin();
+  telnetSetup(); // Start teh telnet server
+
+
+
+
+
 
   //=== loop() section  ===================
   xLastWakeTime = xTaskGetTickCount();
@@ -479,6 +494,11 @@ void cameraSetup(){
 
 
 void cameraLoop(){
+  server.handleClient();// ElegantOTA
+
+}
+
+void telenetLoop(){
 
 
 }

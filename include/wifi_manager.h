@@ -22,7 +22,7 @@ WiFiManagerParameter custom_field; // global param ( for non blocking w params )
 
 void checkButton(){
   // check for button press
-  out("checking button ... status :"); out(digitalRead(TRIGGER_PIN)); out("  for pin "); outln(TRIGGER_PIN);
+  //out("checking button ... status :"); out(digitalRead(TRIGGER_PIN)); out("  for pin "); outln(TRIGGER_PIN);
   if ( digitalRead(TRIGGER_PIN) == LOW ) {
     // poor mans debounce/press-hold, code not ideal for production
     delay(50);
@@ -154,9 +154,5 @@ void wmLoop() {
   checkButton();
   // put your main code here, to run repeatedly:
 }
-
-
-
-
 
 #endif

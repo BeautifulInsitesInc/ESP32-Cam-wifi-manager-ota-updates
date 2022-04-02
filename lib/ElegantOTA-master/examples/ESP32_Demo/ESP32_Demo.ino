@@ -26,9 +26,7 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  server.on("/", []() {
-    server.send(200, "text/plain", "Hi! I am ESP32.");
-  });
+   server.handleClient();
 
   ElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin();
