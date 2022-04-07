@@ -8,25 +8,22 @@
 #include <WiFiMulti.h>
 #include <ElegantOTA.h>
 
+// DEBUGGING
+#define DEBUG // Comment out to remove all serial prints
 
+#ifdef DEBUG
+  #define out(x) Serial.print(x)
+  #define outln(x) Serial.println(x)
+  #define tout(x) Telnet.print(x)
+  #define toutln(x) Telnet.println(x)
+#else
+  #define out(x)
+  #define outln(x)
+  #define tout(x)
+  #define toutln(x)
+#endif
 
-#define DEBUG_PRE_WIFI
-    #ifdef DEBUG_PRE_WIFI
-        #define pout(x) Serial.print(x)
-        #define poutln(x) Serial.println(x)
-    #else
-        #define pout(x) 
-        #define poutln(x)
-    #endif
-
-#define DEBUG_WIFI
-    #ifdef DEBUG_WIFI
-        #define out(x) Telnet.print(x)
-        #define outln(x) Telnet.println(x)
-    #else
-        #define pout(x) 
-        #define poutln(x)
-    #endif
+// ADDITIONAL FILES
 
 
 #include "wifi_manager.h"

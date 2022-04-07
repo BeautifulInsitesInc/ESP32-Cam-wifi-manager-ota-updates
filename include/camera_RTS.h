@@ -393,9 +393,9 @@ void mjpegCB(void* pvParameters) {
 
   //  Starting webserver
   ElegantOTA.begin(&server);    // Start ElegantOTA
-  poutln("ElegantOTA started");
+  outln("ElegantOTA started");
   server.begin();
-  telnetSetup(); // Start teh telnet server
+  //telnetSetup(); // Start teh telnet server
 
 
 
@@ -439,9 +439,9 @@ void cameraSetup(){
   config.pixel_format = PIXFORMAT_JPEG;
 
   // Frame parameters: pick one
-  //  config.frame_size = FRAMESIZE_UXGA;
+  // config.frame_size = FRAMESIZE_UXGA;
   //  config.frame_size = FRAMESIZE_SVGA;
-  //  config.frame_size = FRAMESIZE_QVGA;
+  //config.frame_size = FRAMESIZE_QVGA;
   config.frame_size = FRAMESIZE_VGA;
   config.jpeg_quality = 12;
   config.fb_count = 2;

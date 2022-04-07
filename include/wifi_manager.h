@@ -5,9 +5,15 @@
  * WiFiManager advanced demo, contains advanced configurartion options
  * Implements TRIGGEN_PIN button press, press for ondemand configportal, hold for 3 seconds for reset settings.
  */
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 
 #define TRIGGER_PIN 13
+#define AP_LED_PIN 15
+#define WIFI_LED_PIN 14
+#define LED_PIN 33
+
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+
+
 String ap_name = "Cam AP";
 String ap_password = "password"; // password for the local AP
 
@@ -24,13 +30,21 @@ void checkButton(){
   // check for button press
   //out("checking button ... status :"); out(digitalRead(TRIGGER_PIN)); out("  for pin "); outln(TRIGGER_PIN);
   if ( digitalRead(TRIGGER_PIN) == LOW ) {
+    digitalWrite(LED_PIN, LOW);
+    digitalWrite(AP_LED_PIN, HIGH);
     // poor mans debounce/press-hold, code not ideal for production
-    delay(50);
+    delay(1000);
+    digitalWrite(AP_LED_PIN, LOW);
     if( digitalRead(TRIGGER_PIN) == LOW ){
+      
       Serial.println("Button Pressed");
       // still holding button for 3000 ms, reset settings, code not ideaa for production
       delay(3000); // reset delay hold
+      
+
       if( digitalRead(TRIGGER_PIN) == LOW ){
+        digitalWrite(AP_LED_PIN, HIGH);
+        digitalWrite(WIFI_LED_PIN, LOW);
         Serial.println("Button Held");
         Serial.println("Erasing Config, restarting");
         wm.resetSettings();
@@ -41,16 +55,24 @@ void checkButton(){
       Serial.println("Starting config portal");
       wm.setConfigPortalTimeout(120);
       
+      
       if (!wm.startConfigPortal("OnDemandAP","password")) {
         Serial.println("failed to connect or hit timeout");
+        digitalWrite(AP_LED_PIN, HIGH);
         delay(3000);
-        // ESP.restart();
+        //ESP.restart();
       } else {
-        //if you get here you have connected to the WiFi
-        Serial.println("connected...yeey :)");
+        //if you get here you portal has started
+        Serial.println("connected to AP?...yeey :)");
+        digitalWrite(AP_LED_PIN, HIGH);
+        digitalWrite(WIFI_LED_PIN, LOW);
+        
       }
     }
+ 
   }
+  digitalWrite(LED_PIN, HIGH);
+  
 }
 
 
@@ -75,14 +97,14 @@ void saveParamCallback(){
 
 void wmSetup() {
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP  
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);  
-  delay(3000);
-  Serial.println("\n Starting");
 
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(AP_LED_PIN, OUTPUT);
+  pinMode(WIFI_LED_PIN, OUTPUT);
+
   
-  // wm.resetSettings(); // wipe settings
+  //wm.resetSettings(); // wipe settings
 
   if(wm_nonblocking) wm.setConfigPortalBlocking(false);
 
@@ -136,14 +158,20 @@ void wmSetup() {
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
   res = wm.autoConnect("Cam Auto AP","password"); // password protected ap
-
+  digitalWrite(AP_LED_PIN, HIGH);
+  digitalWrite(WIFI_LED_PIN, LOW);
+  
   if(!res) {
     Serial.println("Failed to connect or hit timeout");
-    // ESP.restart();
+    digitalWrite(AP_LED_PIN, HIGH);
+    digitalWrite(WIFI_LED_PIN, LOW);
+    //ESP.restart();
   } 
   else {
     //if you get here you have connected to the WiFi    
-    Serial.println("connected...yeey :)");
+    Serial.println("connected to wifi...yeey :)");
+    digitalWrite(AP_LED_PIN, LOW);
+    digitalWrite(WIFI_LED_PIN, HIGH);
   }
 }
 
